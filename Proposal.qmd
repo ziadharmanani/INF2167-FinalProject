@@ -1,0 +1,34 @@
+---
+title: "Project Proposal"
+subtitle: "INF2167 - R for Data Science"
+author: "Ziad Harmanani"
+format: pdf
+mainfont: "Times New Roman"
+fontsize: "12pt"
+bibliography: references.bib
+execute: 
+  warning: false
+---
+
+1.  Introduction
+2.  Research Question(s) & Hypotheses
+3.  Dataset & Methods
+4.  Exploratory Data Analysis
+
+#### Workspace setup ####
+## Load packages ##
+
+```{r}
+#| include: false
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+```
+
+```{r}
+raw <- read_csv("data/raw.csv")
+```
+
+```{r}
+summary(raw)
+```
