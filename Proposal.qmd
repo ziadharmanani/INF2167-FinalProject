@@ -1,23 +1,29 @@
 ---
-title: "Project Proposal"
-subtitle: "INF2167 - R for Data Science"
+title: "Evaluating the Impact of Canada's 2016 Child Benefit Reform on Child Poverty"
+subtitle: "Project Proposal"
 author: "Ziad Harmanani"
-format: pdf
-mainfont: "Times New Roman"
-fontsize: "12pt"
+format:
+  pdf:
+    mainfont: "Times New Roman"
+    fontsize: "12pt"
+    pdf-engine: xelatex
+    include-in-header:
+      text: |
+        \usepackage{titlesec}
+        \usepackage{titling}
+        \titleformat{\section}{\large\bfseries}{}{0em}{}
+        \titleformat{\subsection}{\normalsize\bfseries}{}{0em}{}
+        \pretitle{\begin{center}\LARGE\bfseries}
+        \posttitle{\end{center}\vskip 0.5em}
+        \preauthor{\begin{center}\large}
+        \postauthor{\end{center}}
+        \predate{}
+        \postdate{}
 bibliography: references.bib
 execute: 
   warning: false
+  echo: false
 ---
-
-1.  Introduction
-2.  Research Question(s) & Hypotheses
-3.  Dataset & Methods
-4.  Exploratory Data Analysis
-
-#### Workspace setup ####
-## Load packages ##
-
 ```{r}
 #| include: false
 library(tidyverse)
@@ -25,10 +31,21 @@ library(dplyr)
 library(ggplot2)
 ```
 
+## Introduction
+
+Child poverty represents a persistent policy challenge across developed economies, with cash transfer programs increasingly recognised as a primary instrument for addressing it [@bornukova2024investing]. In Canada, the Canada Child Benefit (CCB) is a single income-tested tax-free monthly cash transfer to eligible families to help with the cost of raising children under 18 years of age. The CCB replaced a patchwork of three programs: the Universal Child Care Benefit (UCCB), the Canada Child Tax Benefit (CCTB), and the National Child Benefit (NCB). The CCTB and NCB were income tested but modest, whilst the UCCB was universal but taxable, meaning its real value varied by income bracket [@baker2023effects]. The CCB addressed these limitations by providing larger, tax-free transfers concentrated among lower-income families, with benefit levels phasing out as household income rises. This marks a departure from the flat-rate, pre-tax structure of the UCCB [@baker2023effects]. The Canadian Department of Finance credited the program with lifting approximately 300,000 children out of poverty and projected child poverty rates 40% below their 2013 level [@baker2023effects]. 
+
+Its introduction aimed to reduce child poverty, directing more money to low income families, unlike the UCCB, which paid a flat amount regardless of income.
+
+
+
+## Research Question(s) & Hypotheses
+
+##  Dataset & Methods
+
 ```{r}
+#| include: false
 raw <- read_csv("data/raw.csv")
 ```
 
-```{r}
-summary(raw)
-```
+##  Exploratory Data Analysis
