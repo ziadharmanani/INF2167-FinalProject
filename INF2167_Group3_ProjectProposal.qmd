@@ -1,43 +1,33 @@
 ---
 title: "Evaluating the Impact of Canada's 2016 Child Benefit Reform on Child Poverty"
-subtitle: "Project Proposal"
-author: "Ziad Harmanani"
+subtitle: "Project Proposal - Group 3"
+author:
+  - name: "Ziad Harmanani (1005064788)"
+  - name: "Adviti Kondaveeti (1012751130)"
+date: today
+bibliography: references.bib
+nocite: |
+  @*
+execute:
+  echo: false 
+  warning: false
 format:
   pdf:
-    mainfont: "Times New Roman"
-    fontsize: "12pt"
     pdf-engine: xelatex
-    include-in-header:
-      text: |
-        \usepackage{titlesec}
-        \usepackage{titling}
-        \titleformat{\section}{\large\bfseries}{}{0em}{}
-        \titleformat{\subsection}{\normalsize\bfseries}{}{0em}{}
-        \pretitle{\begin{center}\LARGE\bfseries}
-        \posttitle{\end{center}\vskip 0.5em}
-        \preauthor{\begin{center}\large}
-        \postauthor{\end{center}}
-        \predate{}
-        \postdate{}
-bibliography: references.bib
-execute: 
-  warning: false
-  echo: false
+    mainfont: "Palatino"
+    fontsize: 11pt
+    classoption: [titlepage]
+    number-sections: true
+    toc: false
 ---
-```{r}
-#| include: false
-library(tidyverse)
-library(dplyr)
-library(ggplot2)
-```
 
 ## Introduction
 
-Child poverty represents a persistent policy challenge across developed economies, with cash transfer programs increasingly recognized as a primary instrument for addressing it [@bornukova2024investing]. In Canada, the Canada Child Benefit (CCB) is a single income-tested tax-free monthly cash transfer to eligible families to help with the cost of raising children under 18 years of age. The CCB replaced a patchwork of three programs: the Universal Child Care Benefit (UCCB), the Canada Child Tax Benefit (CCTB), and the National Child Benefit (NCB). The CCTB and NCB were income tested but modest, whilst the UCCB was universal but taxable, meaning its real value varied by income bracket [@baker2023effects]. The CCB addressed these limitations by providing larger, tax-free transfers concentrated among lower-income families, with benefit levels phasing out as household income rises. This marks a departure from the flat-rate, pre-tax structure of the UCCB [@baker2023effects]. The Canadian Department of Finance credited the program with lifting approximately 300,000 children out of poverty and projected child poverty rates 40% below their 2013 level [@baker2023effects]. Its introduction aimed to reduce child poverty, directing more money to low income families, unlike the UCCB, which paid a flat amount regardless of income.
+Child poverty represents a persistent policy challenge across developed economies, with cash transfer programs increasingly recognized as a primary instrument for addressing it [@Bornukova2024Investing]. In Canada, the Canada Child Benefit (CCB) is a single income-tested tax-free monthly cash transfer to eligible families to help with the cost of raising children under 18 years of age. The CCB replaced a patchwork of three programs: the Universal Child Care Benefit (UCCB), the Canada Child Tax Benefit (CCTB), and the National Child Benefit (NCB). The CCTB and NCB were income tested but modest, whilst the UCCB was universal but taxable, meaning its real value varied by income bracket [@baker2023effects]. The CCB addressed these limitations by providing larger, tax-free transfers concentrated among lower-income families, with benefit levels phasing out as household income rises. This marks a departure from the flat-rate, pre-tax structure of the UCCB [@baker2023effects]. The Canadian Department of Finance credited the program with lifting approximately 300,000 children out of poverty and projected child poverty rates 40% below their 2013 level [@baker2023effects]. Its introduction aimed to reduce child poverty, directing more money to low income families, unlike the UCCB, which paid a flat amount regardless of income.
 
 ## Research Question(s) & Hypotheses
 
-It was established that the CCB concentrates larger transfers among lower-income families. This income-tested design offers a natural lens for examining whether the program reduced child poverty, and whether its effects differed across family types. This analysis would explore three related questions.
+It was established that the CCB concentrates larger transfers among lower-income families. This income-tested design offers a natural lens for examining and comparing between exposed and unexposed groups before and after the policy change and whether the program reduced child poverty, and whether its effects differed across family types. This analysis would explore three related questions.
 
 RQ1: Did the introduction of the CCB reduce LIM-AT rates among children in lone-parent families?
 We expect LIM-AT rates among children in lone-parent families to have declined following July 2016, as CCB transfers flowed directly to this group. Working-age adults without children, who were ineligible for the benefit, serve as a benchmark.
@@ -48,18 +38,158 @@ We expect a similar post-2016 decline for children in two-parent families, thoug
 RQ3: Was the post-CCB reduction in LIM-AT rates larger for children in lone-parent families than in two-parent families?
 We expect the decline to have been larger for children in lone-parent families, consistent with the CCB's income-tested structure concentrating larger transfers among lower-income households.
 
-The CCB represented the most significant restructuring of Canadian child benefits in decades, yet direct evidence on whether it reduced child poverty, and for whom, remains limited. All three questions are of particular policy relevance: they each test whether the program's design translated into different outcomes across family types, informing how income-tested child benefits should be structured. 
+The CCB represented the most significant restructuring of Canadian child benefits in decades, yet direct evidence on whether it reduced child poverty, and for whom, remains limited. All three questions are of particular policy relevance: they each test whether the program's design translated into different outcomes across family types, informing how income-tested child benefits should be structured. These hypotheses are also testable using the changes in LIM-AT rates over time, which would allow us to assess whether the observed trends align with the policy’s intended redistributive effects. 
 
 ##  Dataset & Methods
 
+Poverty is measured using the Low Income Measure After Tax (LIM-AT), defined as 50% of median adjusted after-tax household income (Statistics Canada, and widely used in comparative poverty research. Annual LIM-AT rates are drawn from Statistics Canada Table 11-10-0135-01 (Low income statistics by age, gender and economic family type), covering the period 1976 to 2024. The table breaks down low income rates by age group and family type, allowing for comparison of trends across children in lone-parent families, children in two-parents families, and working-age adults without children. LIM-AT is particularly suitable for this analysis because it measures poverty based on how far a household’s income is from the middle income in Canada, while adjusting for how many people live in the household. This makes it appropriate for comparing economic well-being across different family structures (e.g., lone-parent vs two-parent families) and ensures that observed differences reflect meaningful disparities in living standards rather than differences in household composition.
+
+This analysis would use a descriptive pre-post design, comparing LIM-AT trends before and after the CCB’s introduction in July of 2016. The pre-CCB period would span from 2007 to 2015, and the post-CCB period would span from 2016 to 2024. Working-age adults without children serve as a benchmark group, as they are ineligible for CCB transfers and therefore not directly exposed to this reform. Differences in LIM-AT rates post-2016 trends will be examined relative to the benchmark group and would be interpreted as consistent with the CCB effect.
+
+Because this analysis is descriptive and follows a difference-in-differences (DiD) approach, the data would be aggregated at the family-type level, and it is not possible to identify which individuals received the CCB and analyze changes in patterns between treated and untreated groups. Documentation of the trends in child poverty shifted around the program's introduction in a manner consistent with its design would be our main point of analysis.
+
+## Dataset Limitations & Assumptions
+
+The dataset is structured as a repeated cross-sectional time series, with observations defined at the intersection of year, demographic group, and geography. A key limitation of the dataset is that it reports aggregate low-income rates rather than individual-level microdata, which prevents direct identification of which households that receive the CCB. As a result, the analysis cannot control for household-level characteristics (e.g., education, employment status) and instead relies on group-level trends, which may introduce out of scope factors that are not explicitly accounted for. In this framework, children in lone-parent and two-parent families constitute the treatment groups, while working-age adults without children serve as the control group because they are not eligible for the benefit. This comparison allows us to distinguish policy-related changes from broader economic trends that affect all groups.
+
+A key assumption in this analysis is that, before the introduction of the CCB, low-income trends for children and adults without children were moving in similar ways over time. In other words, if the policy had not been introduced, we would expect both groups to continue following similar patterns. This can be checked by looking at pre-2016 trends in the data, if they appear fairly stable and roughly parallel, it makes the comparison more credible. After 2016, any noticeable differences in how these trends evolve between the groups can be interpreted as evidence consistent with the impact of the CCB. However, this interpretation should be made cautiously, since it relies on the assumption that no other major policy changes or external factors affected the groups differently during the same period. To strengthen the analysis further, patterns can also be compared across provinces, since differences in regional economic conditions and baseline poverty levels may influence the size of the observed effects.
+
+##  Exploratory Data Analysis
+
 ```{r}
+# Set-up
 #| include: false
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+
 raw <- read_csv("data/raw.csv")
 ```
 
-Poverty is measured using the Low Income Measure After Tax (LIM-AT), defined as 50% of median adjusted after-tax household income [@statisticscanada2024], and widely used in comparative poverty research. Annual LIM-AT rates are drawn from Statistics Canada Table 11-10-0135-01 (Low income statistics by age, gender and economic family type), covering the period 1976 to 2024. The table breaks down low income rates by age group and family type, allowing for comparison of trends across children in lone-parent families, children in two-parents families, and working-age adults without children.
+```{r}
+# Specify groups to keep
+groups <- c(
+  "Persons under 18 years in one-parent families where the parent is a woman+",
+  "Persons under 18 years in couple families with children",
+  "Non-seniors not in an economic family"
+)
 
-This analysis would use a descriptive pre-post design, comparing LIM-AT trends before and after the CCB’s introduction in July of 2016. The pre-CCB period would span from 2007 to 2015, and the post-CCB period would span from 2016 to 2024. Working-age adults without children serve as a benchmark group, as they are ineligible for CCB transfers and therefore not directly exposed to this reform. Any post-2016 deviation in LIM-AT rates between the treatment group and the benchmark group would be interpreted as consistent with the CCB effect.
-Because this analysis is descriptive, the data would be aggregated at the family-type level, and it is not possible to identify which individuals received the CCB. The analysis would document whether trends in child poverty shifted around the program's introduction in a manner consistent with its design.
+# Rename long labels for visualizations
+labels <- c(
+  "Persons under 18 years in one-parent families where the parent is a woman+" = "Children: Lone-parent",
+  "Persons under 18 years in couple families with children" = "Children: Two-parent",
+  "Non-seniors not in an economic family" = "Adults: No children (benchmark)"
+)
 
-##  Exploratory Data Analysis
+# Filter by columns of interest
+df <- raw |>
+  filter(
+    GEO == "Canada",
+    `Low income lines` == "Low income measure after tax",
+    Statistics == "Percentage of persons in low income",
+    `Persons in low income` %in% groups,
+    REF_DATE >= 2010
+  ) |>
+  mutate(
+    group = recode(`Persons in low income`, !!!labels),
+    value = as.numeric(VALUE),
+    year = as.integer(REF_DATE)
+  ) |>
+  select(year, group, value) |>
+  filter(!is.na(value))
+```
+
+```{r}
+#| echo: false
+#| fig-cap: "LIM-AT Rates Change by Group, Canada 2010 to 2024"
+#| fig-width: 9
+#| fig-height: 5
+
+ggplot(df, aes(x = year, y = value, colour = group)) +
+  geom_line(linewidth = 0.9) +
+  geom_point(size = 2) +
+  labs(
+    title = "LIM-AT Rates Change by Group, Canada 2010 to 2024",
+    x = NULL,
+    y = "LIM-AT Rate (%)",
+    colour = NULL,
+    caption = "Source: Statistics Canada, Table 11-10-0135-01"
+  ) +
+  theme_minimal() +
+    theme(
+      plot.title = element_text(size = 14),
+      legend.position = "bottom"
+    )
+```
+
+The gap between lone-parent and two-parent children is considerably large, with roughly 30% throughout the period. Moreover, all three groups drop sharply around 2020, which almost certainly reflects the effects of the Canada Emergency Response Benefit (CERB) during COVID, boosting household incomes. Finally, lone-parent rates appear to trend downward from around 44% in 2015 to 37% by 2024, but the post-2021 uptick suggests some of that improvement reversed as COVID supports ended. The benchmark group stays relatively flat throughout, which is useful. This suggests the changes in children groups are not simply tracking general economic trends.
+
+```{r}
+#| echo: false
+#| fig-cap: "LIM-AT Rate Change Over the Years"
+#| fig-width: 9
+#| fig-height: 7
+
+df |>
+  group_by(group) |>
+  mutate(yoy = value - lag(value)) |>
+  filter(!is.na(yoy)) |>
+  ggplot(aes(x = year, y = yoy, fill = group)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~group, ncol = 1) +
+  labs(
+    title = "LIM-AT Rate Change Over the Years",
+    x = NULL,
+    y = "Change (pp)",
+    caption = "Source: Statistics Canada, Table 11-10-0135-01"
+  ) +
+  theme_minimal() +
+    theme(
+      plot.title = element_text(size = 14),
+      legend.position = "bottom"
+    )
+```
+
+The lone-parent panel is far more volatile than the other two. There are a few large swings: a drop of nearly 10pp around 2015-2016, a spike back up in 2016-2017, and another sharp drop in 2020. The two-parent panel shows much smaller, steadier changes, rarely exceeding 2pp in either direction. The benchmark panel is similarly steady except for the 2020 drop (COVID). The volatility in the lone-parent group makes it harder to attribute changes to any single policy.
+
+```{r}
+#| echo: false
+#| fig-cap: "LIM-AT Rates for Children in Lone-Parent Families per Province, 2024"
+#| fig-width: 9
+#| fig-height: 5
+
+raw |>
+  filter(
+    GEO %in% c("Newfoundland and Labrador", "Prince Edward Island",
+                "Nova Scotia", "New Brunswick", "Quebec", "Ontario",
+                "Manitoba", "Saskatchewan", "Alberta", "British Columbia"),
+    `Low income lines` == "Low income measure after tax",
+    Statistics == "Percentage of persons in low income",
+    `Persons in low income` == "Persons under 18 years in one-parent families where the parent is a woman+",
+    REF_DATE == 2024
+  ) |>
+  mutate(value = as.numeric(VALUE)) |>
+  filter(!is.na(value)) |>
+  ggplot(aes(x = reorder(GEO, value), y = value)) +
+  geom_col(fill = "orangered") +
+  coord_flip() +
+  labs(
+    title = "LIM-AT Rates for Children in Lone-Parent Families per Province, 2024",
+    x = NULL,
+    y = "LIM-AT Rate (%)",
+    caption = "Source: Statistics Canada, Table 11-10-0135-01"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 12))
+```
+
+Saskatchewan  and Manitoba are the two provinces with a LIM-AT rate above 50%, indicating that roughly half of the children in lone-parent families live in low income. Quebec has the lowest LIM-AT rate, which is roughly around 28%. This is almost certainly attributable to its heavily subsidized $10/day childcare system, which directly addresses one of the largest cost and employment barriers facing single parents. Lower childcare costs free income and enable labor force participation simultaneously.
+
+Saskatchewan and Manitoba's elevated rates are partly explained by the composition of their populations. Indigenous people made up 17% and 18.1% of each province's population respectively in 2021, among the highest shares of any province [@statisticscanada2021census]. This matters because Indigenous Canadians face persistent income disadvantages that extend beyond differences in age or education. Drawing on full census microdata, Pendakur and Pendakur found that "rates of economic success for Aboriginal people have generally been poor", a disparity most severe in Prairie cities like Winnipeg, Saskatoon, and Regina [@pendakur2011aboriginal]. As nearly one in four Indigenous children already lives in a low-income household (more than double the non-Indigenous rate) provinces with large Indigenous populations are expected to show higher aggregate LIM-AT rates among children in lone-parent families [@statisticscanada2021census].
+
+{{< pagebreak >}}
+
+## References
+
+::: {#refs}
+:::
