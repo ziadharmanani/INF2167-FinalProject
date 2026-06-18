@@ -33,13 +33,22 @@ library(ggplot2)
 
 ## Introduction
 
-Child poverty represents a persistent policy challenge across developed economies, with cash transfer programs increasingly recognised as a primary instrument for addressing it [@bornukova2024investing]. In Canada, the Canada Child Benefit (CCB) is a single income-tested tax-free monthly cash transfer to eligible families to help with the cost of raising children under 18 years of age. The CCB replaced a patchwork of three programs: the Universal Child Care Benefit (UCCB), the Canada Child Tax Benefit (CCTB), and the National Child Benefit (NCB). The CCTB and NCB were income tested but modest, whilst the UCCB was universal but taxable, meaning its real value varied by income bracket [@baker2023effects]. The CCB addressed these limitations by providing larger, tax-free transfers concentrated among lower-income families, with benefit levels phasing out as household income rises. This marks a departure from the flat-rate, pre-tax structure of the UCCB [@baker2023effects]. The Canadian Department of Finance credited the program with lifting approximately 300,000 children out of poverty and projected child poverty rates 40% below their 2013 level [@baker2023effects]. 
-
-Its introduction aimed to reduce child poverty, directing more money to low income families, unlike the UCCB, which paid a flat amount regardless of income.
-
-
+Child poverty represents a persistent policy challenge across developed economies, with cash transfer programs increasingly recognized as a primary instrument for addressing it [@bornukova2024investing]. In Canada, the Canada Child Benefit (CCB) is a single income-tested tax-free monthly cash transfer to eligible families to help with the cost of raising children under 18 years of age. The CCB replaced a patchwork of three programs: the Universal Child Care Benefit (UCCB), the Canada Child Tax Benefit (CCTB), and the National Child Benefit (NCB). The CCTB and NCB were income tested but modest, whilst the UCCB was universal but taxable, meaning its real value varied by income bracket [@baker2023effects]. The CCB addressed these limitations by providing larger, tax-free transfers concentrated among lower-income families, with benefit levels phasing out as household income rises. This marks a departure from the flat-rate, pre-tax structure of the UCCB [@baker2023effects]. The Canadian Department of Finance credited the program with lifting approximately 300,000 children out of poverty and projected child poverty rates 40% below their 2013 level [@baker2023effects]. Its introduction aimed to reduce child poverty, directing more money to low income families, unlike the UCCB, which paid a flat amount regardless of income.
 
 ## Research Question(s) & Hypotheses
+
+It was established that the CCB concentrates larger transfers among lower-income families. This income-tested design offers a natural lens for examining whether the program reduced child poverty, and whether its effects differed across family types. This analysis would explore three related questions.
+
+RQ1: Did the introduction of the CCB reduce LIM-AT rates among children in lone-parent families?
+We expect LIM-AT rates among children in lone-parent families to have declined following July 2016, as CCB transfers flowed directly to this group. Working-age adults without children, who were ineligible for the benefit, serve as a benchmark.
+
+RQ2: Did the introduction of the CCB reduce LIM-AT rates among children in two-parent families?
+We expect a similar post-2016 decline for children in two-parent families, though likely smaller in magnitude given their generally higher household incomes and correspondingly lower CCB transfer amounts.
+
+RQ3: Was the post-CCB reduction in LIM-AT rates larger for children in lone-parent families than in two-parent families?
+We expect the decline to have been larger for children in lone-parent families, consistent with the CCB's income-tested structure concentrating larger transfers among lower-income households.
+
+The CCB represented the most significant restructuring of Canadian child benefits in decades, yet direct evidence on whether it reduced child poverty, and for whom, remains limited. All three questions are of particular policy relevance: they each test whether the program's design translated into different outcomes across family types, informing how income-tested child benefits should be structured. 
 
 ##  Dataset & Methods
 
@@ -47,5 +56,10 @@ Its introduction aimed to reduce child poverty, directing more money to low inco
 #| include: false
 raw <- read_csv("data/raw.csv")
 ```
+
+Poverty is measured using the Low Income Measure After Tax (LIM-AT), defined as 50% of median adjusted after-tax household income [@statisticscanada2024], and widely used in comparative poverty research. Annual LIM-AT rates are drawn from Statistics Canada Table 11-10-0135-01 (Low income statistics by age, gender and economic family type), covering the period 1976 to 2024. The table breaks down low income rates by age group and family type, allowing for comparison of trends across children in lone-parent families, children in two-parents families, and working-age adults without children.
+
+This analysis would use a descriptive pre-post design, comparing LIM-AT trends before and after the CCB’s introduction in July of 2016. The pre-CCB period would span from 2007 to 2015, and the post-CCB period would span from 2016 to 2024. Working-age adults without children serve as a benchmark group, as they are ineligible for CCB transfers and therefore not directly exposed to this reform. Any post-2016 deviation in LIM-AT rates between the treatment group and the benchmark group would be interpreted as consistent with the CCB effect.
+Because this analysis is descriptive, the data would be aggregated at the family-type level, and it is not possible to identify which individuals received the CCB. The analysis would document whether trends in child poverty shifted around the program's introduction in a manner consistent with its design.
 
 ##  Exploratory Data Analysis
