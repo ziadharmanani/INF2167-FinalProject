@@ -54,8 +54,9 @@ The dataset is structured as a repeated cross-sectional time series, with observ
 library(tidyverse)
 library(dplyr)
 library(ggplot2)
+library(here)
 
-raw <- read_csv("data/raw.csv")
+raw <- read_csv(here::here("data", "raw.csv"))
 ```
 
 ```{r}
