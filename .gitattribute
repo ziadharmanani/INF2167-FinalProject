@@ -1,0 +1,2 @@
+*.qmd linguist-detectable=false
+*.R linguist-detectable=true
