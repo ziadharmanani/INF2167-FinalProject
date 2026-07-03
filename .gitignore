@@ -4,6 +4,8 @@
 # Session Data files
 .RData
 .RDataTmp
+# Large .csv files
+data/*.csv
 # User-specific files
 .Ruserdata
 # Example code in package build process

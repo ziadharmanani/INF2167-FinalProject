@@ -48,109 +48,13 @@ The dataset is structured as a repeated cross-sectional time series, with observ
 
 ##  Exploratory Data Analysis
 
-```{r}
-# Set-up
-#| include: false
-library(tidyverse)
-library(dplyr)
-library(ggplot2)
-library(here)
+![LIM-AT Rates Change by Group, Canada 2007 to 2024](../outputs/national_trends.png)
 
-raw <- read_csv(here::here("data", "raw.csv"))
-```
+Figure 1 shows that lone-parent rates run roughly 30 percentage points above two-parent rates throughout the period, trending downward from around 44% in 2015 to 37% by 2024, though the post-2021 uptick suggests some of that improvement reversed as COVID supports wound down. The sharp 2020 drop across all three groups almost certainly reflects the CERB. Notably, the benchmark group remains flat outside of 2020, suggesting that changes in the children groups are not simply tracking broader economic trends.
 
-```{r}
-# Specify groups to keep
-groups <- c(
-  "Persons under 18 years in one-parent families where the parent is a woman+",
-  "Persons under 18 years in couple families with children",
-  "Non-seniors not in an economic family"
-)
+![LIM-AT Rates for Children in Lone-Parent Families per Province, 2024](../outputs/provincial_lim-at_rates_2024.png)
 
-# Rename long labels for visualizations
-labels <- c(
-  "Persons under 18 years in one-parent families where the parent is a woman+" = "Children: Lone-parent",
-  "Persons under 18 years in couple families with children" = "Children: Two-parent",
-  "Non-seniors not in an economic family" = "Adults: No children (benchmark)"
-)
-
-# Filter by columns of interest
-df <- raw |>
-  filter(
-    GEO == "Canada",
-    `Low income lines` == "Low income measure after tax",
-    Statistics == "Percentage of persons in low income",
-    `Persons in low income` %in% groups,
-    REF_DATE >= 2007
-  ) |>
-  mutate(
-    group = recode(`Persons in low income`, !!!labels),
-    value = as.numeric(VALUE),
-    year = as.integer(REF_DATE)
-  ) |>
-  select(year, group, value) |>
-  filter(!is.na(value))
-```
-
-```{r}
-#| echo: false
-#| fig-cap: "LIM-AT Rates Change by Group, Canada 2007 to 2024"
-#| fig-width: 9
-#| fig-height: 5
-#| fig-pos: "H"
-
-ggplot(df, aes(x = year, y = value, colour = group)) +
-  geom_line(linewidth = 0.9) +
-  geom_point(size = 2) +
-  labs(
-    title = "LIM-AT Rates Change by Group, Canada 2007 to 2024",
-    x = NULL,
-    y = "LIM-AT Rate (%)",
-    colour = NULL,
-    caption = "Source: Statistics Canada, Table 11-10-0135-01"
-  ) +
-  theme_minimal() +
-    theme(
-      plot.title = element_text(size = 14),
-      legend.position = "bottom"
-    )
-```
-
-Lone-parent rates run roughly 30 percentage points above two-parent rates throughout the period, trending downward from around 44% in 2015 to 37% by 2024, though the post-2021 uptick suggests some of that improvement reversed as COVID supports wound down. The sharp 2020 drop across all three groups almost certainly reflects the CERB. Notably, the benchmark group remains flat outside of 2020, suggesting that changes in the children groups are not simply tracking broader economic trends.
-
-```{r}
-#| echo: false
-#| fig-cap: "LIM-AT Rates for Children in Lone-Parent Families per Province, 2024"
-#| fig-width: 9
-#| fig-height: 5
-#| fig-pos: "H"
-
-raw |>
-  filter(
-    GEO %in% c("Newfoundland and Labrador", "Prince Edward Island",
-                "Nova Scotia", "New Brunswick", "Quebec", "Ontario",
-                "Manitoba", "Saskatchewan", "Alberta", "British Columbia"),
-    `Low income lines` == "Low income measure after tax",
-    Statistics == "Percentage of persons in low income",
-    `Persons in low income` == "Persons under 18 years in one-parent families where the parent is a woman+",
-    REF_DATE == 2024
-  ) |>
-  mutate(value = as.numeric(VALUE)) |>
-  filter(!is.na(value)) |>
-  ggplot(aes(x = reorder(GEO, value), y = value)) +
-  geom_col(fill = "orangered") +
-  coord_flip() +
-  labs(
-    title = "LIM-AT Rates for Children in Lone-Parent Families per Province, 2024",
-    x = NULL,
-    y = "LIM-AT Rate (%)",
-    caption = "Source: Statistics Canada, Table 11-10-0135-01"
-  ) +
-  theme_minimal() +
-  theme(plot.title = element_text(size = 12))
-```
-
-Saskatchewan and Manitoba are the only provinces with LIM-AT rates above 50%, partly reflecting their demographic composition: Indigenous people made up 17% and 18.1% of each province's population in 2021, among the highest shares nationally [@statisticscanada2021census]. Given that Indigenous Canadians face persistent income disadvantages [@pendakur2011aboriginal] and nearly one in four Indigenous children already lives in a low-income household, more than double the non-Indigenous rate, higher aggregate LIM-AT rates in these provinces are expected [@statisticscanada2021census].
+Figure 2 shows that Saskatchewan and Manitoba are the only provinces with LIM-AT rates above 50%, partly reflecting their demographic composition: Indigenous people made up 17% and 18.1% of each province's population in 2021, among the highest shares nationally [@statisticscanada2021census]. Given that Indigenous Canadians face persistent income disadvantages [@pendakur2011aboriginal] and nearly one in four Indigenous children already lives in a low-income household, more than double the non-Indigenous rate, higher aggregate LIM-AT rates in these provinces are expected [@statisticscanada2021census].
 
 {{< pagebreak >}}
 
