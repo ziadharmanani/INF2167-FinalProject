@@ -1,38 +1,37 @@
 # Cleans and prepares the raw Statistics Canada data for analysis.
 
 library(tidyverse)
+library(janitor)
 library(here)
 
-low_income <- read_csv(here("data", "low_income.csv"))
+low_income <- read_csv(here("data", "low_income.csv")) |>
+  clean_names()
 
-# Groups of interest
-groups <- c(
-  "Persons under 18 years in one-parent families where the parent is a woman+",
-  "Persons under 18 years in couple families with children",
-  "Non-seniors not in an economic family"
-)
-
-# Short labels for visualizations
-labels <- c(
-  "Persons under 18 years in one-parent families where the parent is a woman+" = "Children: Lone-parent",
-  "Persons under 18 years in couple families with children" = "Children: Two-parent",
-  "Non-seniors not in an economic family" = "Adults: No children (benchmark)"
-)
-
-df <- low_income |>
-  filter(
-    GEO == "Canada",
-    `Low income lines` == "Low income measure after tax",
-    Statistics == "Percentage of persons in low income",
-    `Persons in low income` %in% groups,
-    REF_DATE >= 2007
-  ) |>
+cleaned_low_income <- low_income |>
+  
   mutate(
-    group = recode(`Persons in low income`, !!!labels),
-    value = as.numeric(VALUE),
-    year  = as.integer(REF_DATE)
-  ) |>
-  select(year, group, value) |>
-  filter(!is.na(value))
+    across(where(is.character), str_squish),
+    ref_date = as.integer(ref_date),
+    date = as.Date(date),
+    value = suppressWarnings(as.numeric(value))
+  )
 
-write_csv(df, here("data", "cleaned_low_income.csv"))
+
+write_csv(cleaned_low_income, here("data", "cleaned_low_income.csv"))
+
+# Check for NAs in the value column across the different family types
+cleaned_low_income |>
+  filter(
+    low_income_lines == "Low income measure after tax",
+    statistics == "Percentage of persons in low income",
+    grepl("under 18", persons_in_low_income) # Focus on all child categories
+  ) |>
+  group_by(persons_in_low_income) |>
+  summarize(
+    total_years = n_distinct(ref_date),
+    missing_values = sum(is.na(value)),
+    min_year = min(as.numeric(ref_date), na.rm = TRUE),
+    max_year = max(as.numeric(ref_date), na.rm = TRUE)
+  )
+
+nrow(cleaned_low_income)

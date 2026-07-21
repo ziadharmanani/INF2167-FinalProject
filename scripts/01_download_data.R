@@ -1,9 +1,11 @@
 # Downloads Statistics Canada Table 11-10-0135-01
 # Source: https://www150.statcan.gc.ca/t1/tbl1/en/dtbl/11-10-0135-01
 
-# Uses the {cansim} package to retrieve the table programmatically.
-# Run once to save the raw data locally before cleaning.
-install.packages("cansim")
+# Uses the {cansim} package to retrieve the table programmatically
+# Run once to save the raw data locally before cleaning
+if (!requireNamespace("cansim", quietly = TRUE)) {
+  install.packages("cansim")
+}
 library(cansim)
 library(here)
 
