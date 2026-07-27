@@ -16,6 +16,7 @@ Statistics Canada Table 11-10-0135-01, *Low Income Statistics by Age, Gender and
 
 ## Repository Structure
 
+```
 ├── scripts/
 │   ├── 01-download_data.R                  # Downloads raw data via {cansim}
 │   ├── 02-clean_data.R                     # Standardizes and cleans the raw data
@@ -30,6 +31,8 @@ Statistics Canada Table 11-10-0135-01, *Low Income Statistics by Age, Gender and
 ├── INF2167-FinalProject.Rproj
 ├── LICENSE
 └── README.md
+```
+
 ## Reproducing the Analysis
 
 1. Clone this repository and open `INF2167-FinalProject.Rproj` in RStudio.
