@@ -18,16 +18,16 @@ Statistics Canada Table 11-10-0135-01, *Low Income Statistics by Age, Gender and
 
 ```
 ├── scripts/
-│   ├── 01-download_data.R                  # Downloads raw data via {cansim}
-│   ├── 02-clean_data.R                     # Standardizes and cleans the raw data
-│   ├── 03-prepare_data.R                   # Filters/reshapes into analysis-ready panels
-│   ├── 04-exploratory_data_analysis.R      # Exploratory data analysis and figures
-│   └── 05-model_data.R                     # Estimates the DiD models
-├── outputs/                                # Cleaned data, figures, and saved models
+│   ├── 01-download_data.R                # Downloads raw data via {cansim}
+│   ├── 02-clean_data.R                   # Standardizes and cleans the raw data
+│   ├── 03-prepare_data.R                 # Filters/reshapes into analysis-ready panels
+│   ├── 04-exploratory_data_analysis.R    # Exploratory data analysis and figures
+│   └── 05-model_data.R                   # Estimates the DiD models
+├── outputs/
+├── models/
 ├── paper/
-│   └── INF2167_Group3_Paper.qmd            # Final paper (Quarto)
-├── proposal/
-│   └── INF2167_Group3_ProjectProposal.qmd  # Project proposal (Quarto)
+│   ├── INF2167_Group3_Paper.qmd
+│   └── INF2167_Group3_ProjectProposal.qmd
 ├── INF2167-FinalProject.Rproj
 ├── LICENSE
 └── README.md
