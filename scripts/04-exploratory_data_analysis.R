@@ -37,7 +37,6 @@ figure1 <- cleaned_low_income |>
   ) |>
   mutate(group_label = recode(persons_in_low_income, "1" = "Lone Parent", "2" = "Two Parent")) |>
   ggplot(aes(x = ref_date, y = value, colour = group_label)) +
-  #ggplot(aes(x = ref_date, y = value, colour = persons_in_low_income)) +
   geom_line(linewidth = 0.9) +
   geom_point(size = 2) +
   labs(
@@ -89,14 +88,19 @@ figure3 <- cleaned_low_income |>
     low_income_lines == "Low income measure after tax",
     persons_in_low_income %in% c("Non-seniors not in an economic family", child_family_types)
   ) |>
-  mutate(group_label = recode(persons_in_low_income, !!!group_labels)) |>
+  mutate(
+    group_label = recode(
+      persons_in_low_income,
+      "Persons under 18 years in one-parent families where the parent is a woman+" = "Lone Parent",
+      "Persons under 18 years in couple families with children" = "Two Parent",
+      "Non-seniors not in an economic family" = "Non-Senior Adults (No Children)"
+    )
+  ) |>
   ggplot(aes(x = group_label, y = value)) +
-  #ggplot(aes(x = persons_in_low_income, y = value)) +
   geom_boxplot(fill = "steelblue", alpha = 0.6) +
   geom_jitter(width = 0.1, alpha = 0.4) +
   coord_flip() +
   theme_minimal() +
-  #theme(axis.text.x = element_text(angle = 20, hjust = 1)) +
   labs(
     x = NULL,
     y = "LIM-AT Rate (%)",
@@ -122,7 +126,7 @@ figure4 <- cleaned_low_income |>
   annotate("text", x = 2016.1, y = Inf, label = "CCB introduced", vjust = 1.5, hjust = 0, size = 3) +
   labs(
     title = "Parallel Trends Check: LIM-AT Rates Around the 2016 CCB Reform",
-    x = NULL,
+    x = "Year",
     y = "LIM-AT Rate (%)",
     colour = "Demographic Group",
     caption = "Source: Statistics Canada, Table 11-10-0135-01"
@@ -162,7 +166,6 @@ figure5 <- cleaned_low_income |>
     caption = "Source: Statistics Canada, Table 11-10-0135-01"
   ) +
   theme_minimal()
-  #theme(axis.text.x = element_text(angle = 15, hjust = 1))
 
 print(figure5)
 
