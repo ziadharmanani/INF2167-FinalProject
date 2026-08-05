@@ -18,6 +18,13 @@ child_family_types <- c(
   "Persons under 18 years in couple families with children"
 )
 
+# Short labels for plotting
+group_labels <- c(
+  "Persons under 18 years in one-parent families where the parent is a woman+" = "Lone-Parent Families",
+  "Persons under 18 years in couple families with children" = "Two-Parent Families",
+  "Non-seniors not in an economic family" = "Non-Senior Adults (No Children)"
+)
+
 # Figure 1: National LIM-AT trends by group, 2007-2024
 figure1 <- cleaned_low_income |>
   filter(
@@ -28,12 +35,14 @@ figure1 <- cleaned_low_income |>
   filter(
     persons_in_low_income %in% c("Non-seniors not in an economic family", child_family_types)
   ) |>
-  ggplot(aes(x = ref_date, y = value, colour = persons_in_low_income)) +
+  mutate(group_label = recode(persons_in_low_income, "1" = "Lone Parent", "2" = "Two Parent")) |>
+  ggplot(aes(x = ref_date, y = value, colour = group_label)) +
+  #ggplot(aes(x = ref_date, y = value, colour = persons_in_low_income)) +
   geom_line(linewidth = 0.9) +
   geom_point(size = 2) +
   labs(
     title = "LIM-AT Rates Change by Group, Canada 2007 to 2024",
-    x = NULL,
+    x = "Year",
     y = "LIM-AT Rate (%)",
     colour  = "Demographic Group",
     caption = "Source: Statistics Canada, Table 11-10-0135-01"
@@ -80,11 +89,14 @@ figure3 <- cleaned_low_income |>
     low_income_lines == "Low income measure after tax",
     persons_in_low_income %in% c("Non-seniors not in an economic family", child_family_types)
   ) |>
-  ggplot(aes(x = persons_in_low_income, y = value)) +
+  mutate(group_label = recode(persons_in_low_income, !!!group_labels)) |>
+  ggplot(aes(x = group_label, y = value)) +
+  #ggplot(aes(x = persons_in_low_income, y = value)) +
   geom_boxplot(fill = "steelblue", alpha = 0.6) +
   geom_jitter(width = 0.1, alpha = 0.4) +
+  coord_flip() +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 20, hjust = 1)) +
+  #theme(axis.text.x = element_text(angle = 20, hjust = 1)) +
   labs(
     x = NULL,
     y = "LIM-AT Rate (%)",
@@ -129,10 +141,18 @@ figure5 <- cleaned_low_income |>
     persons_in_low_income %in% child_family_types,
     ref_date >= 2007, ref_date <= 2024
   ) |>
-  mutate(period = if_else(ref_date >= 2016, "Post-CCB (2016-2024)", "Pre-CCB (2007-2015)")) |>
-  group_by(persons_in_low_income, period) |>
+  mutate(
+    period = if_else(ref_date >= 2016, "Post-CCB (2016-2024)", "Pre-CCB (2007-2015)"),
+    group_label = recode(
+      persons_in_low_income,
+      "Persons under 18 years in one-parent families where the parent is a woman+" = "Lone Parent",
+      "Persons under 18 years in couple families with children" = "Two Parent"
+    )
+  ) |>
+  group_by(group_label, period) |>
   summarize(avg_rate = mean(value, na.rm = TRUE), .groups = "drop") |>
-  ggplot(aes(x = persons_in_low_income, y = avg_rate, fill = period)) +
+  ggplot(aes(x = group_label, y = avg_rate, fill = period)) +
+  coord_flip() +
   geom_col(position = "dodge") +
   labs(
     title = "Average LIM-AT Rates Before vs After the CCB",
@@ -141,8 +161,8 @@ figure5 <- cleaned_low_income |>
     fill = NULL,
     caption = "Source: Statistics Canada, Table 11-10-0135-01"
   ) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 15, hjust = 1))
+  theme_minimal()
+  #theme(axis.text.x = element_text(angle = 15, hjust = 1))
 
 print(figure5)
 
@@ -171,8 +191,8 @@ print(figure6)
 names(cleaned_low_income)
 
 ggsave(here("outputs", "figure1_national_trends.png"), figure1, width = 9, height = 5)
-ggsave(here("outputs", "figure2_provincial_lim-at_rates_2024.png"), figure2, width = 9, height = 5)
-ggsave(here("outputs", "figure3_rate_distribution_by_group.png"), figure3, width = 8, height = 5)
+ggsave(here("outputs", "figure2_provincial_lim-at_rates_2024.png"), figure2, width = 9, height = 5.5)
+ggsave(here("outputs", "figure3_rate_distribution_by_group.png"), figure3, width = 9, height = 5)
 ggsave(here("outputs", "figure4_parallel_trends_check.png"), figure4, width = 9, height = 5)
-ggsave(here("outputs", "figure5_pre_post_average_comparison.png"), figure5, width = 8, height = 5)
+ggsave(here("outputs", "figure5_pre_post_average_comparison.png"), figure5, width = 9, height = 5.5)
 ggsave(here("outputs", "figure6_provincial_trends_small_multiples.png"), figure6, width = 10, height = 6)

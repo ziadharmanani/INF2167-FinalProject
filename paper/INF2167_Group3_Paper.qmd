@@ -68,7 +68,8 @@ $$
 A third, provincial specification adds fixed effects for province, using Quebec, the province with the lowest 2024 LIM-AT rate among lone-parent families, as the reference category, to assess whether baseline poverty gaps between provinces persist after accounting for the CCB's estimated effect:
 
 $$
-\text{PovertyRate}_{ipt} = \beta_0 + \beta_1 \text{Treated}_i + \beta_2 \text{Post2016}_t + \beta_3 (\text{Treated}_i \times \text{Post2016}_t) + \beta_4 \text{CERB}_t + \sum_{p} \gamma_p \text{Province}_p + \varepsilon_{ipt}
+\text{PovertyRate}_{ipt} = \beta_0 + \beta_1 \text{Treated}_i + \beta_2 \text{Post2016}_t + \beta_3 (\text{Treated}_i \times \text{Post2016}_t) 
+\\ + \beta_4 \text{CERB}_t + \sum_{p} \gamma_p \text{Province}_p + \varepsilon_{ipt}
 $$
 
 Because this analysis relies on aggregated family-type data rather than individual-level microdata, it is not possible to identify which specific individuals received the CCB or to control for household-level characteristics directly (e.g., education, employment status); the DiD structure instead identifies the policy's effect from the differential change in group-level trends around the 2016 reform.
@@ -92,7 +93,7 @@ did_model_tidy <- tidy(did_model, conf.int = TRUE)
 # Render the tibble as a table
 kable(did_model_tidy, digits = 3)
 ```
-During the pre-treatment period (2007–2015), the expected baseline LIM-AT rate for children in two-parent families was 11.82%. Prior to the 2016 policy reform, there was a severe structural disparity; the expected LIM-AT rate for children in lone-parent families was 30.01 percentage points higher than that of two-parent families (p < 0.001). Following the implementation of the CCB in 2016, the baseline trend isolates a 3.46% decrease in the two-parent family rate.
+During the pre-treatment period (2007–2015), the expected baseline LIM-AT rate for children in two-parent families was 11.82%. Prior to the 2016 policy reform, there was a severe structural disparity; the expected LIM-AT rate for children in lone-parent families was 30.01% higher than that of two-parent families (p < 0.001). Following the implementation of the CCB in 2016, the baseline trend isolates a 3.46% decrease in the two-parent family rate.
 
 ```{r}
 #| label: model-did-cerb-table
