@@ -7,12 +7,14 @@ library(here)
 cleaned_low_income <- read_csv(here("data", "cleaned_low_income.csv"))
 low_income <- read_csv(here("data", "low_income.csv"))
 
+# Define provinces
 provinces <- c(
   "Newfoundland and Labrador", "Prince Edward Island",
   "Nova Scotia", "New Brunswick", "Quebec", "Ontario",
   "Manitoba", "Saskatchewan", "Alberta", "British Columbia"
 )
 
+# Define groups of interest
 child_family_types <- c(
   "Persons under 18 years in one-parent families where the parent is a woman+",
   "Persons under 18 years in couple families with children"
@@ -25,20 +27,43 @@ group_labels <- c(
   "Non-seniors not in an economic family" = "Non-Senior Adults (No Children)"
 )
 
+# Short labels for plotting
+group_labels <- c(
+  "Persons under 18 years in one-parent families where the parent is a woman+" = "Lone-Parent Families",
+  "Persons under 18 years in couple families with children" = "Two-Parent Families",
+  "Non-seniors not in an economic family" = "Non-Senior Adults (No Children)"
+)
+
+# Define global color palettes (DRY principle)
+group_colors <- c(
+  "Lone Parent" = "#D55E00", 
+  "Two Parent" = "#0072B2", 
+  "Non-Senior Adults (No Children)" = "#7F8C8D"
+)
+
+period_colors <- c(
+  "Pre-CCB (2007-2015)" = "#BFC9CA", 
+  "Post-CCB (2016-2024)" = "#2C3E50"
+)
+
 # Figure 1: National LIM-AT trends by group, 2007-2024
 figure1 <- cleaned_low_income |>
   filter(
     geo == "Canada",
     statistics == "Percentage of persons in low income",
-    low_income_lines == "Low income measure after tax"
-  ) |>
-  filter(
+    low_income_lines == "Low income measure after tax",
     persons_in_low_income %in% c("Non-seniors not in an economic family", child_family_types)
   ) |>
-  mutate(group_label = recode(persons_in_low_income, "1" = "Lone Parent", "2" = "Two Parent")) |>
+  mutate(group_label = recode(
+    persons_in_low_income,
+    "Persons under 18 years in one-parent families where the parent is a woman+" = "Lone Parent",
+    "Persons under 18 years in couple families with children" = "Two Parent",
+    "Non-seniors not in an economic family" = "Non-Senior Adults (No Children)"
+  )) |>
   ggplot(aes(x = ref_date, y = value, colour = group_label)) +
   geom_line(linewidth = 0.9) +
   geom_point(size = 2) +
+  scale_colour_manual(values = group_colors) +
   labs(
     title = "LIM-AT Rates Change by Group, Canada 2007 to 2024",
     x = "Year",
@@ -67,7 +92,7 @@ figure2 <- cleaned_low_income |>
   mutate(value = as.numeric(value)) |>
   filter(!is.na(value)) |>
   ggplot(aes(x = reorder(geo, value), y = value)) +
-  geom_col(fill = "orangered") +
+  geom_col(fill = group_colors["Lone Parent"]) +
   coord_flip() +
   labs(
     title = "LIM-AT Rates for Children in Lone-Parent Families per Province, 2024",
@@ -94,13 +119,14 @@ figure3 <- cleaned_low_income |>
       "Persons under 18 years in one-parent families where the parent is a woman+" = "Lone Parent",
       "Persons under 18 years in couple families with children" = "Two Parent",
       "Non-seniors not in an economic family" = "Non-Senior Adults (No Children)"
-    )
-  ) |>
-  ggplot(aes(x = group_label, y = value)) +
-  geom_boxplot(fill = "steelblue", alpha = 0.6) +
+    )) |>
+  ggplot(aes(x = group_label, y = value, fill = group_label)) +
+  geom_boxplot(alpha = 0.6) +
   geom_jitter(width = 0.1, alpha = 0.4) +
+  scale_fill_manual(values = group_colors) +
   coord_flip() +
   theme_minimal() +
+  theme(legend.position = "none") +
   labs(
     x = NULL,
     y = "LIM-AT Rate (%)",
@@ -119,11 +145,18 @@ figure4 <- cleaned_low_income |>
     persons_in_low_income %in% c("Non-seniors not in an economic family", child_family_types),
     ref_date <= 2019
   ) |>
-  ggplot(aes(x = ref_date, y = value, colour = persons_in_low_income)) +
+  mutate(group_label = recode(
+    persons_in_low_income,
+    "Persons under 18 years in one-parent families where the parent is a woman+" = "Lone Parent",
+    "Persons under 18 years in couple families with children" = "Two Parent",
+    "Non-seniors not in an economic family" = "Non-Senior Adults (No Children)"
+  )) |>
+  ggplot(aes(x = ref_date, y = value, colour = group_label)) +
   geom_line(linewidth = 0.9) +
   geom_point(size = 2) +
   geom_vline(xintercept = 2016, linetype = "dashed", colour = "gray40") +
   annotate("text", x = 2016.1, y = Inf, label = "CCB introduced", vjust = 1.5, hjust = 0, size = 3) +
+  scale_colour_manual(values = group_colors) +
   labs(
     title = "Parallel Trends Check: LIM-AT Rates Around the 2016 CCB Reform",
     x = "Year",
@@ -151,13 +184,13 @@ figure5 <- cleaned_low_income |>
       persons_in_low_income,
       "Persons under 18 years in one-parent families where the parent is a woman+" = "Lone Parent",
       "Persons under 18 years in couple families with children" = "Two Parent"
-    )
-  ) |>
+    )) |>
   group_by(group_label, period) |>
   summarize(avg_rate = mean(value, na.rm = TRUE), .groups = "drop") |>
   ggplot(aes(x = group_label, y = avg_rate, fill = period)) +
   coord_flip() +
   geom_col(position = "dodge") +
+  scale_fill_manual(values = period_colors) +
   labs(
     title = "Average LIM-AT Rates Before vs After the CCB",
     x = NULL,
@@ -175,11 +208,13 @@ figure6 <- cleaned_low_income |>
     geo %in% provinces,
     low_income_lines == "Low income measure after tax",
     statistics == "Percentage of persons in low income",
-    persons_in_low_income == "Persons under 18 years in one-parent families where the parent is a woman+"
+    persons_in_low_income == "Persons under 18 years in one-parent families where the parent is a woman+",
+    ref_date >= 2007, 
+    ref_date <= 2024,
+    !is.na(value)
   ) |>
   ggplot(aes(x = ref_date, y = value)) +
-  geom_line(colour = "orangered", linewidth = 0.5) +
-  geom_vline(xintercept = 2016, linetype = "dashed", colour = "gray50") +
+  geom_line(colour = group_colors["Lone Parent"], linewidth = 0.5) +
   facet_wrap(~ geo, ncol = 5) +
   theme_minimal(base_size = 9) +
   labs(
