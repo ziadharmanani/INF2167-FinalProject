@@ -48,12 +48,15 @@ saveRDS(did_model_cerb, here("models", "did_model_cerb.rds"))
 filtered_low_income_province <- read_csv(here("data", "filtered_low_income_province.csv"))
 
 # Set Quebec as the reference category for province
-filtered_low_income_province_cerb <- filtered_low_income_province_cerb |>
-  mutate(province = relevel(factor(province), ref = "Quebec"))
+filtered_low_income_province_cerb <- filtered_low_income_province |>
+  mutate(
+    cerb = if_else(year %in% c(2020, 2021), 1, 0),
+    province = relevel(factor(province), ref = "Quebec")
+  )
 
 # Estimate the Provincial Fixed Effects Model (Quebec as reference)
-did_model_provincial <- lm(poverty_rate ~ treated * post_2016 + cerb + province, 
-                           data = filtered_low_income_province_cerb)
+#did_model_provincial <- lm(poverty_rate ~ treated * post_2016 + cerb + province, data = filtered_low_income_province_cerb)
+did_model_provincial <- lm(poverty_rate ~ treated * post_2016 + cerb + treated * province, data = filtered_low_income_province_cerb)
 
 summary(did_model_provincial)
 
