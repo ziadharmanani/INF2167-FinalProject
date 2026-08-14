@@ -1,6 +1,6 @@
 ---
 title: "Evaluating the Impact of Canada's 2016 Child Benefit Reform on Child Poverty"
-subtitle: "Project Paper - Group 3"
+subtitle: "Project Paper - Group 3 - https://github.com/ziadharmanani/canada-child-benefit-poverty"
 author:
   - "Ziad Harmanani (1005064788)"
   - "Adviti Kondaveeti (1012751130)"
@@ -83,20 +83,26 @@ Because the CCB is a universal, income-tested benefit, all eligible families wit
 
 We define the pre-CCB period as 2007-2015 and the post-CCB period as 2016-2024, and estimate:
 
-$$\text{PovertyRate}_{it} = \beta_0 + \beta_1 \text{Treated}_i + \beta_2 \text{Post2016}_t + \beta_3 (\text{Treated}_i \times \text{Post2016}_t) + \varepsilon_{it}$$
+$$
+\text{PovertyRate}_{it} = \beta_0 + \beta_1 \text{Treated}_i + \beta_2 \text{Post2016}_t + \beta_3 (\text{Treated}_i \times \text{Post2016}_t) + \varepsilon_{it}
+$$
 
 A second specification adds a dummy $\text{CERB}_t$ for 2020-2021 to absorb the pandemic-driven income-support shock, isolating the CCB effect from this anomaly:
 
-$$\text{PovertyRate}_{it} = \beta_0 + \beta_1 \text{Treated}_i + \beta_2 \text{Post2016}_t + \beta_3 (\text{Treated}_i \times \text{Post2016}_t) + \beta_4 \text{CERB}_t + \varepsilon_{it}$$
+$$
+\text{PovertyRate}_{it} = \beta_0 + \beta_1 \text{Treated}_i + \beta_2 \text{Post2016}_t + \beta_3 (\text{Treated}_i \times \text{Post2016}_t) + \beta_4 \text{CERB}_t + \varepsilon_{it}
+$$
 
 A third, provincial specification adds fixed effects for province, using Quebec, the province with the lowest 2024 LIM-AT rate amongst lone-parent families, as the reference category, to assess whether baseline poverty gaps between provinces persist after accounting for the CCB's estimated effect:
 
-$$\begin{aligned}
+$$
+\begin{aligned}
 \text{PovertyRate}_{ipt} = \beta_0 + \beta_1 \text{Treated}_i + \beta_2 \text{Post2016}_t + \beta_3 (\text{Treated}_i \times \text{Post2016}_t) 
 \\ + \beta_4 \text{CERB}_t + \sum_{p} \gamma_p \text{Province}_p + \sum_{p} \delta_p (\text{Treated}_i \times \text{Province}_p) + \varepsilon_{ipt}
-\end{aligned}$$
+\end{aligned}
+$$
 
-Because this analysis relies on aggregated family-type data rather than individual-level microdata, it is not possible to identify which specific individuals received the CCB or to control for household-level characteristics directly (e.g., education, employment status); the DiD structure instead identifies the policy's effect from the differential change in group-level trends around the 2016 reform.
+Because this analysis relies on aggregated family-type data rather than individual-level microdata, it is not possible to identify which specific individuals received the CCB or to control for household-level characteristics directly, such aseducation and employment status, the DiD structure instead identifies the policy's effect from the differential change in group-level trends around the 2016 reform.
 
 ### Parallel trends
 
