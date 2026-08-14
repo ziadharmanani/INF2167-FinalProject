@@ -6,7 +6,7 @@ author:
   - "Adviti Kondaveeti (1012751130)"
 date: today
 date-format: long
-abstract: "Provide a short (~150 word) abstract that includes the main problem you investigated, your data and methods, findings, and contribution(s)."
+abstract: "This study evaluates the impact of the 2016 Canada Child Benefit (CCB) on child poverty by comparing outcomes between lone-parent and two-parent families. We apply a difference-in-differences (DiD) design to Statistics Canada’s Low Income Measure After Tax (LIM-AT) data spanning from 2007 to 2024. To isolate the policy's true effect, our models include adjustments for the 2020-2021 CERB anomaly and provincial fixed effects, utilizing Quebec as the baseline reference category. We find that while the CCB modestly reduced poverty for two-parent families, while it produced a larger reduction (an additional 3.83% to 4.68%, depending on the specification) for lone-parent families. After controlling for the 2020-2021 CERB anomaly, this differential impact achieves statistical significance. Furthermore, our provincial analysis reveals that Quebec maintains a structurally smaller poverty gap between lone- and two-parent families compared to most other provinces."
 format: pdf
 number-sections: true
 bibliography: references.bib
@@ -22,61 +22,100 @@ library(tidyverse)
 library(broom)
 library(knitr)
 library(here)
+
+# Change labels for regression table
+clean_terms <- function(term) {
+  case_when(
+    term == "(Intercept)" ~ "Intercept",
+    term == "treated:post_2016" ~ "Treated x Post-2016",
+    str_detect(term, "^treated:province") ~ paste0("Treated x Province: ", str_remove(term, "^treated:province")),
+    str_detect(term, "^province") ~ paste0("Province: ", str_remove(term, "^province")),
+    term == "treated" ~ "Treated",
+    term == "post_2016" ~ "Post-2016",
+    term == "cerb" ~ "CERB",
+    TRUE ~ term
+  ) |>
+  str_replace_all(" ", "\u00A0")
+}
 ```
 
 ## Introduction
 
-Child poverty represents a persistent policy challenge across developed economies, with cash transfer programs increasingly recognized as a primary instrument for addressing it [@Bornukova2024Investing]. In Canada, the Canada Child Benefit (CCB), introduced in July 2016, is a single income-tested, tax-free monthly transfer to eligible families with children under 18. It replaced a patchwork of three earlier federal programs (the Universal Child Care Benefit (UCCB), the Canada Child Tax Benefit (CCTB), and the National Child Benefit (NCB)) that were either modest but income-tested, or universal but taxable, meaning their real value varied by income bracket [@baker2023effects]. The CCB addressed these limitations by concentrating larger, tax-free transfers among lower-income families, phasing out benefit levels as household income rises, a clear departure from the flat-rate, pre-tax UCCB structure [@baker2023effects]. The Department of Finance credited the program with lifting approximately 300,000 children out of poverty and projected child poverty rates 40% below their 2013 level [@baker2023effects].
+Child poverty represents a persistent policy challenge across developed economies, with cash transfer programs increasingly recognized as a primary instrument for addressing it [@Bornukova2024Investing]. In Canada, the Canada Child Benefit (CCB), introduced in July 2016, is a single income-tested, tax-free monthly transfer to eligible families with children under 18. It replaced a patchwork of three earlier federal programs (the Universal Child Care Benefit (UCCB), the Canada Child Tax Benefit (CCTB), and the National Child Benefit (NCB)) that were either modest but income-tested, or universal but taxable, meaning their real value varied by income bracket [@baker2023effects]. The CCB addressed these limitations by concentrating larger, tax-free transfers amongst lower-income families, phasing out benefit levels as household income rises, a clear departure from the flat-rate, pre-tax UCCB structure [@baker2023effects]. The Department of Finance credited the program with lifting approximately 300,000 children out of poverty and projected child poverty rates 40% below their 2013 level [@baker2023effects].
 
-Because the CCB concentrates larger transfers among lower-income households, and lone-parent families experience substantially higher rates of low income than two-parent families, the reform offers a natural setting to compare outcomes between these two groups: both received the CCB, but two-parent families' generally higher household incomes make them a lower-exposure comparison group under the CCB's income-tested design. This allows us to examine whether the policy's design translated into measurably different reductions in poverty across the two groups. This motivates three related research questions:
+Because the CCB concentrates larger transfers amongst lower-income households, and lone-parent families experience substantially higher rates of low income than two-parent families, the reform offers a natural setting to compare outcomes between these two groups: both received the CCB, but two-parent families' generally higher household incomes make them a lower-exposure comparison group under the CCB's income-tested design. This allows us to examine whether the policy's design translated into measurably different reductions in poverty across the two groups. 
 
-This motivates three related research questions:
+Figure 1 makes the structural disparity motivating this study visually explicit. Across the 18 year sample period, the two-parent poverty distribution remains tightly concentrated just above 10%, indicating a persistently low and stable poverty rate. By contrast, the lone-parent distribution spans roughly between 30% and 55%, with a median above 45%, showing no overlap with the two-parent group at any point. The non-senior adult benchmark falls squarely between these two distributions in both level and spread, consistent with its intended role as a parallel-trends comparison group. Additionally, the two lone-parent low outliers around 25% accurately capture the sharp, temporary decline associated with the 2020-2021 CERB period discussed below. Taken together, the figure confirms that the lone-parent and two-parent poverty gap is a durable structural reality, rather than an artifact of a few extreme years.
 
-**RQ1: Did the introduction of the CCB reduce Low Income Measure After Tax (LIM-AT) rates among children in lone-parent families?**
-We expect a decline following July 2016, as CCB transfers flowed directly to this group.
+```{r}
+#| label: fig-lim-at-rates
+#| echo: false
+#| fig-pos: "H"
+#| fig-align: "center"
+#| fig-cap: "Distribution of LIM-AT Rates by Group, 2007-2024"
 
-**RQ2: Did the introduction of the CCB reduce LIM-AT rates among children in two-parent families?** 
-We expect a similar, though likely smaller, post-2016 decline, given this group's generally higher household incomes and correspondingly lower CCB transfer amounts.
+knitr::include_graphics(here("outputs", "figure3_rate_distribution_by_group.png"))
+```
 
-**RQ3: Was the post-CCB reduction in LIM-AT rates larger for children in lone-parent families than for children in two-parent families?**
-We expect the decline to be larger for lone-parent families, consistent with the CCB's income-tested structure directing proportionally larger transfers toward this group.
+Establishing this severe baseline disparity directly motivates our three related research questions:
 
-These questions matter beyond their immediate empirical answer: if a universal, income-tested design like the CCB's produces measurably larger poverty reductions for the group facing the steepest initial disparity, this has direct implications for how future child benefit programs should be structured, and for the broader debate over targeted versus universal transfer design.
+**1. Did the introduction of the CCB reduce Low Income Measure After Tax (LIM-AT) rates amongst children in lone-parent families?** We expect a decline following July 2016, as CCB transfers flowed directly to this group.
 
-To address these questions, we use a difference-in-differences (DiD) design applied to Statistics Canada's LIM-AT series (Table 11-10-0135-01), comparing lone-parent and two-parent families before (2007–2015) and after (2016–2024) the CCB's introduction, with a supplementary specification isolating the 2020–2021 CERB-driven anomaly. We find evidence consistent with all three hypotheses: the CCB era is associated with a modest decline in two-parent LIM-AT rates and a larger decline for lone-parent families, producing a statistically significant DiD interaction. We further extend the analysis provincially, using Quebec (the province with the lowest 2024 LIM-AT rate for children in lone-parent families) as the reference category, to examine whether baseline poverty levels elsewhere in Canada remain meaningfully higher even after accounting for the CCB's estimated effect.
+**2. Did the introduction of the CCB reduce LIM-AT rates amongst children in two-parent families?** We expect a similar, though likely smaller, post-2016 decline, given this group's generally higher household incomes and correspondingly lower CCB transfer amounts.
+
+**3. Was the post-CCB reduction in LIM-AT rates larger for children in lone-parent families than for children in two-parent families?** We expect the decline to be larger for lone-parent families, consistent with the CCB's income-tested structure directing proportionally larger transfers toward this group.
+
+These questions matter beyond their immediate empirical answer. Early scholarship held that universal benefits achieve greater redistribution than benefits targeted at the poor ("the paradox of redistribution"), but recent cross-national evidence complicates this view, finding that targeting toward lower incomes is not necessarily associated with weaker poverty reduction, and can outperform universal design when paired with a sufficiently large re-distributive budget [@van2015universalism]. The CCB, as a universal-eligibility but income-tested transfer, is a case of what @van2015universalism term "targeting within universality," a design their 26-country analysis identifies as generally the strongest-performing category for child poverty reduction, though outcomes vary depending on national context.
+
+The CCB, as a universal-eligibility but income-tested transfer, is a case of what @van2015universalism term "targeting within universality", a design their 26 country analysis identifies as the strongest-performing category for child poverty reduction. If this design produces measurably larger poverty reductions for the group facing the steepest initial disparity, this has direct implications for how future child benefit programs should be structured, and for the broader debate over targeted versus universal transfer design.
+
+To address these questions, we use a difference-in-differences (DiD) design applied to Statistics Canada's LIM-AT series (Table 11-10-0135-01), comparing lone-parent and two-parent families before (2007-2015) and after (2016-2024) the CCB's introduction, with a supplementary specification isolating the 2020-2021 CERB-driven anomaly. We find evidence consistent with all three hypotheses: the CCB era is associated with a modest decline in two-parent LIM-AT rates and a larger decline for lone-parent families, producing a statistically significant DiD interaction. We further extend the analysis provincially, using Quebec (the province with the lowest 2024 LIM-AT rate for children in lone-parent families) as the reference category, to examine whether baseline poverty levels elsewhere in Canada remain meaningfully higher even after accounting for the CCB's estimated effect.
 
 ## Dataset and methods
 
-Poverty is measured using the Low Income Measure After Tax (LIM-AT), defined as 50% of median adjusted after-tax household income [@statisticscanada2024], a standard poverty threshold in comparative research. Annual LIM-AT rates are drawn from Statistics Canada Table 11-10-0135-01 [@statisticscanada2024], covering 1976–2024. The lone-parent group is restricted to families where the parent is a woman, as the dataset does not separately report lone-father families.
+Poverty is measured using the Low Income Measure After Tax (LIM-AT), defined as 50% of median adjusted after-tax household income [@statisticscanada2024], a standard poverty threshold in comparative research. Annual LIM-AT rates are drawn from Statistics Canada Table 11-10-0135-01 [@statisticscanada2024], covering 1976 to 2024. The lone-parent group is restricted to families where the parent is a woman, as the dataset does not separately report lone-father families.
 
-The data was retrieved programmatically using the `{cansim}` R package (`01-download_data.R`), which queries Statistics Canada's data directly rather than relying on a manual download, ensuring the raw data can be reproduced from source at any time. The raw table was then cleaned (`02-clean_data.R`) by standardizing column names, coercing date and value fields to their appropriate types, and checking for missing values across family-type categories. Finally (`03-prepare_data.R`), the cleaned data were filtered and reshaped into three analysis-ready panels: a national panel comparing lone-parent and two-parent families, a provincial panel fragmenting the same comparison by geography, and a benchmark series tracking non-senior adults without children, used only as a parallel-trends check (see below).
+The data was retrieved programmatically using the `{cansim}` R package (`01-download_data.R`), which queries Statistics Canada's data directly rather than relying on a manual download, ensuring the raw data can be reproduced from source at any time. The raw table was then cleaned (`02-clean_data.R`) by standardizing column names, coercing date and value fields to their appropriate types, and checking for missing values across family-type categories. Finally (`03-prepare_data.R`), the cleaned data were filtered and reshaped into three panels: a national panel comparing lone-parent and two-parent families, a provincial panel fragmenting the same comparison by geography, and a benchmark series tracking non-senior adults without children, used only as a parallel-trends check (see below).
 
-**Difference-in-differences design.** Because the CCB is a universal, income-tested benefit, all eligible families with children received some transfer after its July 2016 introduction. We therefore treat lone-parent families as the treated group ($\text{Treated}_i = 1$) and two-parent families as the comparison group ($\text{Treated}_i = 0$), reasoning that two-parent families' generally higher household incomes make them a lower-exposure comparison group under the CCB's income-tested design, rather than a strictly untreated group. This is a standard binary-group, two-period DiD specification [@callaway2023difference], and, in this two-period case, is numerically equivalent to the simple difference-in-means estimator and does not require additional assumptions to accommodate treatment effect heterogeneity [@callaway2023difference]. Because the CCB was introduced simultaneously for all eligible families in July 2016, rather than at staggered points in time across units, this analysis also avoids the treatment-timing complications that motivate more recent DiD estimators.
+### Difference-in-differences design
 
-We define the pre-CCB period as 2007–2015 and the post-CCB period as 2016–2024, and estimate:
+Because the CCB is a universal, income-tested benefit, all eligible families with children received some transfer after its July 2016 introduction. We therefore treat lone-parent families as the treated group ($\text{Treated}_i = 1$) and two-parent families as the comparison group ($\text{Treated}_i = 0$), reasoning that two-parent families' generally higher household incomes make them a lower-exposure comparison group under the CCB's income-tested design, rather than a strictly untreated group. This is a standard binary-group, two-period DiD specification [@callaway2023difference], and, in this two-period case, is numerically equivalent to the simple difference-in-means estimator and does not require additional assumptions to accommodate treatment effect heterogeneity [@callaway2023difference]. Because the CCB was introduced simultaneously for all eligible families in July 2016, rather than at staggered points in time across units, this analysis also avoids the treatment-timing complications that motivate more recent DiD estimators.
 
-$$
-\text{PovertyRate}_{it} = \beta_0 + \beta_1 \text{Treated}_i + \beta_2 \text{Post2016}_t + \beta_3 (\text{Treated}_i \times \text{Post2016}_t) + \varepsilon_{it}
-$$
+We define the pre-CCB period as 2007-2015 and the post-CCB period as 2016-2024, and estimate:
 
-A second specification adds a dummy $\text{CERB}_t$ for 2020–2021 to absorb the pandemic-driven income-support shock, isolating the CCB effect from this anomaly:
+$$\text{PovertyRate}_{it} = \beta_0 + \beta_1 \text{Treated}_i + \beta_2 \text{Post2016}_t + \beta_3 (\text{Treated}_i \times \text{Post2016}_t) + \varepsilon_{it}$$
 
-$$
-\text{PovertyRate}_{it} = \beta_0 + \beta_1 \text{Treated}_i + \beta_2 \text{Post2016}_t + \beta_3 (\text{Treated}_i \times \text{Post2016}_t) + \beta_4 \text{CERB}_t + \varepsilon_{it}
-$$
+A second specification adds a dummy $\text{CERB}_t$ for 2020-2021 to absorb the pandemic-driven income-support shock, isolating the CCB effect from this anomaly:
 
-A third, provincial specification adds fixed effects for province, using Quebec, the province with the lowest 2024 LIM-AT rate among lone-parent families, as the reference category, to assess whether baseline poverty gaps between provinces persist after accounting for the CCB's estimated effect:
+$$\text{PovertyRate}_{it} = \beta_0 + \beta_1 \text{Treated}_i + \beta_2 \text{Post2016}_t + \beta_3 (\text{Treated}_i \times \text{Post2016}_t) + \beta_4 \text{CERB}_t + \varepsilon_{it}$$
 
-$$
+A third, provincial specification adds fixed effects for province, using Quebec, the province with the lowest 2024 LIM-AT rate amongst lone-parent families, as the reference category, to assess whether baseline poverty gaps between provinces persist after accounting for the CCB's estimated effect:
+
+$$\begin{aligned}
 \text{PovertyRate}_{ipt} = \beta_0 + \beta_1 \text{Treated}_i + \beta_2 \text{Post2016}_t + \beta_3 (\text{Treated}_i \times \text{Post2016}_t) 
-\\ + \beta_4 \text{CERB}_t + \sum_{p} \gamma_p \text{Province}_p + \varepsilon_{ipt}
-$$
+\\ + \beta_4 \text{CERB}_t + \sum_{p} \gamma_p \text{Province}_p + \sum_{p} \delta_p (\text{Treated}_i \times \text{Province}_p) + \varepsilon_{ipt}
+\end{aligned}$$
 
 Because this analysis relies on aggregated family-type data rather than individual-level microdata, it is not possible to identify which specific individuals received the CCB or to control for household-level characteristics directly (e.g., education, employment status); the DiD structure instead identifies the policy's effect from the differential change in group-level trends around the 2016 reform.
 
-**Parallel trends.** As a check on this design's core identifying assumption, we separately examine pre-2016 trends for non-senior adults without children, a group that received no CCB transfer at all, alongside the two family-type series. If poverty trends among children and this childless benchmark group moved similarly before 2016, this supports the claim that the post-2016 divergence in family-type trends reflects the CCB specifically, rather than a broader economy-wide shift affecting all groups. This check is descriptive and is not itself a treated/control group within the formal DiD model.
+### Parallel trends
+
+As a check on this design's core identifying assumption, we separately examine pre-2016 trends for non-senior adults without children, a group that received no CCB transfer at all, alongside the two family-type series. If poverty trends amongst children and this childless benchmark group moved similarly before 2016, this supports the claim that the post-2016 divergence in family-type trends reflects the CCB specifically, rather than a broader economy-wide shift affecting all groups. This check is descriptive and is not itself a treated/control group within the formal DiD model.
+
+```{r}
+#| label: fig-parallel-trends
+#| echo: false
+#| fig-pos: "H"
+#| fig-align: "center"
+#| fig-cap: "Parallel Trends Check: LIM-AT Rates Around the 2016 CCB Reform"
+
+knitr::include_graphics(here("outputs", "figure4_parallel_trends_check.png"))
+```
+As Figure 2 illustrates, prior to the 2016 intervention, the LIM-AT rates for lone-parent families, two-parent families, and the benchmark group of non-senior adults followed similar trajectories. While the absolute levels of poverty differ significantly between the groups, they move in tandem with no obvious diverging trends in the years leading up to the CCB reform. This visual evidence satisfies the parallel trends assumption, validating our difference-in-differences approach.
 
 ## Results and findings
+
+This section presents results from the three difference-in-differences specifications described above. We proceed in three stages. First, the base model (Table 1) estimates the overall pre-treatment gap between lone-parent and two-parent families and the change in that gap following the CCB's introduction in 2016. Second, the CERB-adjusted model (Table 2) isolates the CCB's effect from the 2020-2021 pandemic income-support shock. Third, the provincial fixed-effects model (Table 3) extends the analysis geographically, testing whether the national-level CCB effect holds once province-level differences in the baseline lone-parent and two-parent gap are accounted for, using Quebec as the reference category. Together, these models address our research questions and speak to whether the CCB's income-tested design produced a measurably larger poverty reduction for the group facing the steepest initial disparity (Lone parent families). We begin with the base model, which estimates the overall change in the lone-parent and two-parent poverty gap following the CCB's introduction.
 
 ```{r}
 #| label: model-did-table
@@ -88,12 +127,36 @@ Because this analysis relies on aggregated family-type data rather than individu
 did_model <- readRDS(here("models", "did_model.rds"))
 
 # Convert the model output to a clean tibble
-did_model_tidy <- tidy(did_model, conf.int = TRUE)
+did_model_tidy <- tidy(did_model, conf.int = TRUE) |>
+  mutate(term = clean_terms(term))
+
+did_model_tidy |>
+  rename(
+    Term = term, 
+    Estimate = estimate,
+    `Std. Error` = std.error,
+    Statistic = statistic, 
+    `p-value` = p.value,
+    `Lower Bound` = conf.low, 
+    `Upper Bound` = conf.high
+  ) |>
 
 # Render the tibble as a table
-kable(did_model_tidy, digits = 3)
+kable(digits = 3, caption = "Base Difference-in-Differences Model")
 ```
-During the pre-treatment period (2007–2015), the expected baseline LIM-AT rate for children in two-parent families was 11.82%. Prior to the 2016 policy reform, there was a severe structural disparity; the expected LIM-AT rate for children in lone-parent families was 30.01% higher than that of two-parent families (p < 0.001). Following the implementation of the CCB in 2016, the baseline trend isolates a 3.46% decrease in the two-parent family rate.
+
+
+During the pre-treatment period (2007-2015), the expected baseline LIM-AT rate for children in two-parent families was 11.82%. Prior to the 2016 policy reform, there was a severe structural disparity; the expected LIM-AT rate for children in lone-parent families was 30.01% higher than that of two-parent families ($p < 0.001$). Following the implementation of the CCB in 2016, the baseline trend isolates a 3.46% decrease in the two-parent family rate. These aggregate shifts are visualized in Figure 3, which illustrates the stark drop in average poverty rates for both family structures between the pre- and post-CCB periods. Having established the CCB's estimated effect at the national level, we next isolate it from the 2020-2021 CERB anomaly to confirm the pandemic-driven income shock is not driving the result.
+
+```{r}
+#| label: fig-pre-post-average-comparision
+#| echo: false
+#| fig-pos: "H"
+#| fig-align: "center"
+#| fig-cap: "Average LIM-AT Rates Before vs. After the CCB"
+
+knitr::include_graphics(here("outputs", "figure5_pre_post_average_comparison.png"))
+```
 
 ```{r}
 #| label: model-did-cerb-table
@@ -105,13 +168,27 @@ During the pre-treatment period (2007–2015), the expected baseline LIM-AT rate
 did_model_cerb <- readRDS(here("models", "did_model_cerb.rds"))
 
 # Convert the model output to a clean tibble
-did_model_cerb_tidy <- tidy(did_model_cerb, conf.int = TRUE)
+did_model_cerb_tidy <- tidy(did_model_cerb, conf.int = TRUE) |>
+  mutate(term = clean_terms(term))
+
+did_model_cerb_tidy |>
+  rename(
+    Term = term, 
+    Estimate = estimate,
+    `Std. Error` = std.error,
+    Statistic = statistic, 
+    `p-value` = p.value,
+    `Lower Bound` = conf.low, 
+    `Upper Bound` = conf.high
+  ) |>
 
 # Render the tibble as a table
-kable(did_model_cerb_tidy, digits = 3)
+kable(digits = 3, caption = "CERB-Adjusted Difference-in-Differences Model")
 ```
 
-To isolate the true causal effect of the CCB, a secondary model introduces a dummy variable to absorb the variance caused by the 2020–2021 pandemic anomaly (CERB). By accounting for this pandemic-driven shock separately, the residual standard error drops to 2.350, isolating the policy effect from a confounding event unrelated to the CCB itself. The Difference-in-Differences estimator addresses RQ3, indicating that the CCB reform is associated with an additional 3.83% reduction in the LIM-AT rate specifically for lone-parent families, over and above the baseline trend observed in two-parent families. This confirms that the income-tested design of the CCB exerted a stronger poverty-reduction effect on the structurally lower-income group.
+To isolate the true causal effect of the CCB, a secondary model introduces a dummy variable to absorb the variance caused by the 2020-2021 pandemic anomaly (CERB). By accounting for this pandemic-driven shock separately, the residual standard error drops to 2.350, isolating the policy effect from a confounding event unrelated to the CCB itself. The Difference-in-Differences estimator addresses RQ3, indicating that the CCB reform is associated with an additional 3.83% reduction in the LIM-AT rate specifically for lone-parent families, over and above the baseline trend observed in two-parent families. This confirms that the income-tested design of the CCB exerted a stronger poverty-reduction effect on the structurally lower-income group. Finally, we extend the analysis provincially to test whether this national-level effect holds once baseline differences in the lone-parent/two-parent gap across provinces are accounted for, using Quebec as the reference category.
+
+Notably, the DiD interaction coefficient (-3.83) remains identical to the base model, but only achieves statistical significance at the 0.05 level once the CERB dummy is introduced ($p = 0.020$ compared to $p = 0.064$). This indicates that by absorbing the excess variance caused by the pandemic income shock, the residual standard error shrinks, pushing the stable point estimate across conventional significance thresholds without shifting the coefficient itself.
 
 ```{r}
 #| label: model-did-provincial-table
@@ -123,26 +200,61 @@ To isolate the true causal effect of the CCB, a secondary model introduces a dum
 did_model_provincial <- readRDS(here("models", "did_model_provincial.rds"))
 
 # Convert the model output to a clean tibble
-did_model_provincial_tidy <- tidy(did_model_provincial, conf.int = TRUE)
+did_model_provincial_tidy <- tidy(did_model_provincial, conf.int = TRUE) |>
+  mutate(term = clean_terms(term))
+
+did_model_provincial_tidy |>
+  rename(
+    Term = term, 
+    Estimate = estimate,
+    `Std. Error` = std.error,
+    Statistic = statistic, 
+    `p-value` = p.value,
+    `Lower Bound` = conf.low, 
+    `Upper Bound` = conf.high
+  ) |>
 
 # Render the tibble as a table
-kable(did_model_provincial_tidy, digits = 3)
-
+kable(digits = 3, caption = "Provincial Fixed-Effects Model (Referenced to Quebec)")
 ```
 
-The provincial specification, using Quebec as the reference category, extends this finding geographically. The intercept (6.42%) represents Quebec's own baseline LIM-AT rate for two-parent families in the pre-treatment period, notably lower than the 11.82% national baseline in the first two models, consistent with Quebec's LIM-AT rate for lone-parent families being the lowest among all provinces in 2024. Every other province's coefficient is interpreted relative to this Quebec baseline, holding the DiD structure constant. Most provinces show a statistically significant, positive gap relative to Quebec: Manitoba shows the largest disparity, with a baseline LIM-AT rate 13.06 percentage points higher than Quebec's (p < 0.001), followed by Newfoundland and Labrador (10.07 points, p < 0.001) and Prince Edward Island (9.31 points, p < 0.001). Alberta (0.56 points, p = 0.695) and British Columbia (2.19 points, p = 0.119) are the only two provinces whose baseline rates are not statistically distinguishable from Quebec's. This pattern suggests that Quebec's lower poverty rate for lone-parent families is not an artifact of the CCB alone, since the gap between Quebec and most other provinces persists even after the CCB's estimated effect (captured by `treated:post_2016`) and the pandemic shock (`cerb`) are held constant, pointing to province-level factors, such as Quebec's own family allowance and subsidized childcare programs, that may compound with the federal CCB to produce lower residual poverty specifically in Quebec.
+The selection of Quebec as a natural reference category is supported both by our exploratory data analysis and established empirical literature. Since the 1967 introduction of its own provincial family allowance and the 1997 introduction of low-fee universal childcare, shown to significantly increase maternal labour force participation [@baker2008universal], Quebec has pursued family policy independently of the federal government. Statistics Canada Census data confirm this pattern empirically: in 2020, Quebec's poverty rate (6.4%) was the lowest of any province and the only one below the national average (8.1%), a gap attributed in part to its subsidized childcare program [@Zhang_Bernard_2022]. Our own provincial model results below extend this further, showing that Quebec's advantage is concentrated specifically in a structurally smaller lone-parent and two-parent poverty gap rather than lower poverty broadly.
 
-The `treated:post_2016` interaction in the provincial model (-4.682, p < 0.001) is somewhat larger in magnitude than in the national models, and remains highly significant once province-level baseline differences are accounted for. This indicates that the CCB's differential poverty-reduction effect for lone-parent families relative to two-parent families holds even after controlling for persistent geographic disparities in baseline poverty, strengthening the case that the effect identified in RQ3 reflects the policy itself rather than being driven by any single province's trend.
+```{r}
+#| label: fig-provincial-trends
+#| echo: false
+#| fig-pos: "H"
+#| fig-align: "center"
+#| fig-cap: "LIM-AT Rates for Lone-Parent Families by Province, 2007-2024"
+
+knitr::include_graphics(here("outputs", "figure6_provincial_trends_small_multiples.png"))
+```
+
+First, the `province` coefficients ($\gamma_p$) describe the baseline gap from Quebec amongst two-parent families specifically, since the interaction term separates out any additional lone-parent specific gap. Most provinces are not statistically distinguishable from Quebec on this dimension: only Manitoba shows a significant gap (6.08, $p < 0.001$), with Nova Scotia being marginal (3.23, $p = 0.062$). Alberta, British Columbia, New Brunswick, Newfoundland and Labrador, Ontario, Prince Edward Island, and Saskatchewan all show no significant difference from Quebec's two-parent baseline. In other words, Quebec is not simply a lower-poverty province across the board.
+
+Second, and central to this extension, the `treated:province` coefficients ($\delta_p$) test whether the lone-parent and two-parent poverty gap itself is structurally larger or smaller in a given province than in Quebec, independent of the CCB's own estimated effect. Here the pattern is stark and consistent: Newfoundland and Labrador shows the largest excess gap (+18.49, $p < 0.001$), followed by Saskatchewan (+13.87, $p < 0.001$), Manitoba (+13.94, $p < 0.001$), Prince Edward Island (+12.91, $p < 0.001$), New Brunswick (+7.96, p = 0.001), and Nova Scotia (+5.46, $p = 0.026$), with Ontario marginal (+4.31, $p = 0.079$). Only Alberta (+2.87, $p = 0.248$) and British Columbia (+0.81, $p = 0.742$) are statistically indistinguishable from Quebec on this measure. Combining the base `treated` gap with each province's $\delta_p$, the implied lone-parent and two-parent gap ranges from roughly 26 to 29 points in Quebec, Alberta, and British Columbia up to nearly 45 points in Newfoundland and Labrador, meaning Quebec's advantage is concentrated in how much smaller its lone-parent poverty penalty is, not in generally lower poverty overall. This is consistent with Quebec's long-standing family policy regime, including its separate provincial family allowance and low-fee universal childcare, providing support specifically targeted at lone-parent families that most other provinces do not replicate.
+
+The `treated:post_2016` interaction (-4.677, $p < 0.001$) remains a single, pooled national estimate of the CCB's effect, since `post_2016` is not interacted with province in this specification, meaning this coefficient does not vary by province. It is somewhat larger in magnitude than the CERB-adjusted national model's estimate (-3.83), indicating that once province-level structural differences in the baseline lone-parent gap are accounted for, the estimated CCB effect is, if anything, stronger, reinforcing that the effect identified in RQ3 reflects the policy itself rather than being an artifact of any single province's trend. This pattern is consistent with comparative findings that child benefit systems combining universal eligibility with income-varying benefit levels tend to outperform both strictly universal and strictly selective systems, because they pair a larger overall re-distributive budget with more generous transfers for lower-income families [@van2015universalism].
 
 ## Discussion and Conclusion
 
-### Findings
+### Summary
+
+This study evaluated the impact of the 2016 Canada Child Benefit (CCB) on child poverty rates, specifically examining whether its income-tested design yielded differential poverty reductions for lone-parent versus two-parent families. Using a difference-in-differences (DiD) framework applied to Statistics Canada’s LIM-AT data from 2007 to 2024, our analysis confirms that the CCB successfully reduced child poverty across both family structures. However, the policy's effect was not uniform. The CCB produced an additional 3.83% to 4.68% reduction in poverty specifically for lone-parent families, over and above the baseline trend observed in two-parent households, depending on specification. This differential effect reaches statistical significance once the 2020-2021 CERB anomaly is controlled for, and grows somewhat larger still once provincial structural differences are accounted for, suggesting the CCB-driven divergence between family types is not an artifact of a single specification. This indicates that the CCB's structure effectively directed greater poverty-reduction power toward the demographic facing the most severe structural disadvantage, supporting the efficacy of "targeting within universality" [@van2015universalism]. Importantly, the poverty reductions associated with the CCB do not appear to have come at the cost of reduced labour market participation. @men2023effect found no evidence that the introduction of the CCB generated a negative labour supply response among recipients. This addresses a common criticism of income-transfer programs and suggests that meaningful reductions in child poverty can be achieved without discouraging workforce participation among parents. Furthermore, our provincial fixed-effects model revealed that this baseline disparity varies significantly by geography. Quebec maintains a structurally smaller poverty gap between family types than most other provinces, a finding consistent with its distinct, long-standing provincial family policy regime. Ultimately, these findings demonstrate that universally eligible but income-scaled cash transfers can be highly effective instruments for addressing deeply entrenched child poverty disparities.
 
 ### Limitations
 
-Despite the robustness of the fixed-effects model, this analysis is subject to several methodological limitations. Primarily, the reliance on aggregated, repeated cross-sectional data precludes the observation of individual household dynamics. Because the dataset cannot track specific families over time, the model cannot control for crucial household-level covariates such as parental education, immigration status, or granular employment changes. Additionally, while the differential-intensity DiD framework effectively captures the varying exposure to the CCB, it simplifies a continuous phase-out mechanism into a binary group structure, capturing the average policy effect rather than observing the exact marginal dollar impact per household. Moreover, federal and provincial programs work in tandem, meaning that every province has adjusted their own child benefit programs. This study does not allow to control for provincial policy environments, meaning that we cannot claim that a drop in LIM-AT after 2016 is solely attributed to the federal CCB. Finally, although the model explicitly isolates the 2020–2021 CERB anomaly, other concurrent macroeconomic shifts or unobserved, province-specific policy interventions during the post-2016 window may still confound the true causal estimator.
+This analysis is subject to several methodological limitations. Primarily, the reliance on aggregated, repeated cross-sectional data precludes the observation of individual household dynamics. Because the dataset cannot track specific families over time, the model cannot control for crucial household-level covariates such as parental education, immigration status, or granular employment changes.
+
+Additionally, while the differential-intensity DiD framework effectively captures the varying exposure to the CCB, it simplifies a continuous phase-out mechanism into a binary group structure, capturing the average policy effect rather than observing the exact marginal dollar impact per household. 
+
+From a statistical design perspective, our approach necessitates several methodological caveats. First, our standard errors are simple OLS estimates rather than clustered by family-type-year panel; consequently, the significance levels reported across our models may be overstated due to uncorrected serial correlation over the 18-year period. Second, our parallel trends assumption relies on visual, descriptive confirmation rather than a formal pre-trend event study specification. Third, the provincial fixed-effects model uses Quebec as the reference category. While justified by its distinct institutional history (such as subsidized childcare and a separate provincial family allowance), selecting the province with the best baseline outcome mechanically inflates the likelihood that other provinces will show statistically significant gaps. This does not bias the coefficients themselves, but it does make the pattern of significant provincial gaps appear more dramatic by construction. Finally, because the provincial model estimates 20 additional interaction coefficients without a multiple comparisons correction (such as a Bonferroni or Holm adjustment), marginal findings like those in Nova Scotia ($p = 0.026$) and Ontario ($p = 0.079$) should be interpreted cautiously, though our strongest provincial gaps ($p < 0.001$) would likely survive such corrections.
+
+Lastly, it is important to recognize that the CCB does not operate in a vacuum, either domestically or theoretically. Domestically, federal and provincial programs work in tandem, meaning that every province has adjusted its own child benefit programs alongside the federal reform. Because this study cannot control for these varying provincial policy environments, we cannot claim that the post-2016 drop in LIM-AT is solely attributable to the federal CCB. Furthermore, while the model explicitly isolates the effects of CERB from 2020 to 2021, other unobserved macroeconomic shifts or province-specific interventions may still confound the true causal estimator. This domestic complexity is mirrored in the broader theoretical landscape: as comparative cross-national evidence indicates, the relationship between targeting and poverty reduction heavily depends on whether the intervention occurs within a universal or selective system [@van2015universalism]. Because our design only tests the CCB's specific implementation, it cannot speak to how alternative targeting structures from this broader pool of policy designs might have performed in the Canadian context.
 
 ### Future Research
+
+A natural extension would be to construct a formal targeting index for the CCB, following the statutory-ratio approach used in cross-national comparisons of child benefit design [@van2015universalism], which would allow Canada's CCB to be benchmarked directly against the targeting intensity of European systems. Because our aggregated data cannot separate the CCB's effect from concurrent provincial policy changes, future work using microdata could also test whether the "generosity" or "size" channel identified in that comparative literature better explains the lone-parent-specific decline observed here.
 
 {{< pagebreak >}}
 
